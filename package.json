@@ -1,0 +1,27 @@
+{
+  "name": "lora",
+  "version": "0.0.1",
+  "description": "LORA - analyse PHYPayload and decrypt MACPayload.",
+  "keywords": [
+    "lora",
+    "phypayload",
+    "macpayload"
+  ],
+  "author": "Luc Patiny",
+  "repository": "loradb/lora",
+  "bugs": {
+    "url": "https://github.com/loradb/lora/issues"
+  },
+  "homepage": "https://github.com/loradb/lora",
+  "license": "MIT",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
+    "build": "cheminfo build"
+  },
+  "devDependencies": {
+    "mocha": "^2.3.3",
+    "mocha-better-spec-reporter": "^2.1.3",
+    "should": "^7.1.1"
+  }
+}
