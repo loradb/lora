@@ -1,13 +1,10 @@
 var defaultKeys = require('./defaultKeys.js');
 var aesCmac = require('node-aes-cmac').aesCmac;
+var toArray=require('./toArray.js');
 
 module.exports=function(data, nwkSKey) {
+    data=toArray(data);
     var nwkSKey=nwkSKey || defaultKeys.nwkSKey;
-
-    // the last 4 bytes are expected to be the MIC
-
-    console.log(data);
-
     var seed=[];
     seed.push(0x49);
     seed.push(0x00, 0x00, 0x00, 0x00);
@@ -17,19 +14,17 @@ module.exports=function(data, nwkSKey) {
     seed.push(0x00, 0x00); // FCntUp on 16 bits
     seed.push(0x00);
     seed.push(data.length-4);
+    var allData=seed;
 
+    // the last 4 bytes are expected to be the MIC
     for (var i=0; i<data.length-4; i++) {
-        seed.push(data[i]);
+        allData.push(data[i]);
     }
 
-    var dataBuffer=new Buffer(seed);
-
-    console.log(dataBuffer.length)
-
+    var dataBuffer=new Buffer(allData);
     var keyBuffer=new Buffer(nwkSKey);
-    var result=aesCmac(keyBuffer, dataBuffer);
-    console.log('-------------------')
-    console.log(result);
-    console.log(new Buffer(data.slice(data.length-4)))
-    return true;
+    var result=aesCmac(keyBuffer, dataBuffer); // the 4 first bytes should match the mic
+    var mic=new Buffer(data.slice(data.length-4)).toString('hex');
+
+    return (mic === result.substring(0,8));
 }

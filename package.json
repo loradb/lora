@@ -26,6 +26,8 @@
   },
   "dependencies": {
     "atob": "^2.0.3",
+    "convert-hex": "^0.1.0",
+    "is-array-type": "^1.0.0",
     "node-aes-cmac": "^0.1.1"
   }
 }

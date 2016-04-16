@@ -1,6 +1,6 @@
 var defaultKeys=require('./defaultKeys.js');
 var checkMIC=require('./checkMIC.js');
-var base64ToArray=require('./base64ToArray.js');
+var toArray=require('./toArray.js');
 var AES = require('./aes.js');
 
 const mTypeTexts=[
@@ -18,8 +18,8 @@ var appAES;
 var nwkAES;
 var result;
 
-module.exports=function(data64, options) {
-    data = base64ToArray(data64);
+module.exports=function(data, options) {
+    data = toArray(data);
     var options=options || {};
     var nwkSKey=options.nwkSKey || defaultKeys.nwkSKey;
     var appSKey=options.appSKey || defaultKeys.appSKey;
@@ -49,6 +49,7 @@ module.exports=function(data64, options) {
 
 
 function parseMIC(data) {
+    data=toArray(data);
     var mic={};
     mic.value=data.slice(data.length-4);
     return mic;
