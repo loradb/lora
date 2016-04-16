@@ -1,7 +1,7 @@
 var defaultKeys=require('./defaultKeys.js');
 var checkMIC=require('./checkMIC.js');
 var toArray=require('./toArray.js');
-var AES = require('./aes.js');
+
 
 const mTypeTexts=[
     'Join Request',
@@ -21,8 +21,6 @@ var result;
 module.exports=function(data, options) {
     data = toArray(data);
     var options=options || {};
-    var nwkSKey=options.nwkSKey || defaultKeys.nwkSKey;
-    var appSKey=options.appSKey || defaultKeys.appSKey;
     var level= isNaN(options.level) ? 2 : options.level ;
     var decrypt = (typeof options.decrypt === 'undefined') ? true : options.decrypt;
 
@@ -30,8 +28,7 @@ module.exports=function(data, options) {
         throw Error('Corrupted data');
     }
 
-    appAES = new AES.AES(appSKey);
-    nwkAES = new AES.AES(nwkSKey);
+
     result = {};
     result.data=data;
     result.dataLength=data.length;
@@ -59,38 +56,16 @@ function decryptMessage(result) {
     // check if there is a frmPayload
     var frmPayload=result.macPayload.frmPayload;
     if (! frmPayload) return;
-    var decrypted=[];
 
-    var blockSeed=[];
-    blockSeed.push(0x01);
-    blockSeed.push(0x00, 0x00, 0x00, 0x00);
-    blockSeed.push(0x00); // direction uplink
-    for (var addr of result.macPayload.fhdr.devAddr) {
-        blockSeed.push(addr);
-    }
-    for (var addr of result.macPayload.fhdr.fCnt) {
-        blockSeed.push(addr);
-    }
-    blockSeed.push(0x00, 0x00); // FCntUp on 16 bits
-    blockSeed.push(0x00);
+    // TODO
 
-    for (var i=0; i<Math.ceil(frmPayload.length/16); i++) {
-        blockSeed[15]=(i+1); // the first block is expected to be 1
-        if (blockSeed.length!==16) throw Error('decrypt seed not 16');
-        if (result.macPayload.fPort.value) {
-            var key=appAES.encrypt(blockSeed);
-        } else {
-            var key=nwkAES.encrypt(blockSeed); // MAC commands only, decoded using nwkSKey
-        }
-        for (var j=0+(i*16); j<Math.min(16+(i*16), frmPayload.length); j++) {
-            decrypted.push(frmPayload[j] ^ key[j%16]);
-        }
-    }
+/*
     result.macPayload.decrypted={
         data:decrypted,
         text:AES.util.convertBytesToString(decrypted),
         hex:AES.util.convertBytesToString(decrypted,'hex')
     };
+    */
 }
 
 
@@ -146,7 +121,7 @@ function parseMacPayload(value) {
             fCtrl.ack = value >> 5 & 1;
             // todo : deal with uplink and downlonlink
             fCtrl.rfu = value >> 4 & 1;
-            fCtrl.optsLen = value & 7;
+            fCtrl.optsLen = value & 15;fCtrl.optsLen = value & 15;
             return fCtrl;
         }
     }
