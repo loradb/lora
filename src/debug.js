@@ -1,7 +1,7 @@
-var defaultKeys=require('./defaultKeys.js');
+var defaultKeys=require('./util/defaultKeys.js');
 var checkMIC=require('./checkMIC.js');
-var toArray=require('./toArray.js');
-
+var toArray=require('./util/toArray.js');
+var getPayload=require('./getPayload.js');
 
 const mTypeTexts=[
     'Join Request',
@@ -14,61 +14,35 @@ const mTypeTexts=[
     'Proprietary'
 ];
 
-var appAES;
-var nwkAES;
 var result;
 
-module.exports=function(data, options) {
+module.exports=function(data, nwkSKey, appSKey) {
     data = toArray(data);
-    var options=options || {};
-    var level= isNaN(options.level) ? 2 : options.level ;
-    var decrypt = (typeof options.decrypt === 'undefined') ? true : options.decrypt;
+    var nwkSKey=nwkSKey || defaultKeys.nwkSKey;
+    var appSKey=appSKey || defaultKeys.appSKey;
 
     if (! checkMIC(data, nwkSKey)) {
         throw Error('Corrupted data');
     }
 
-
     result = {};
-    result.data=data;
-    result.dataLength=data.length;
+    result.array=data;
+    result.arrayLength=data.length;
 
     result.mhdr=parseMHDR(data[0]);
     result.macPayload=parseMacPayload(data.slice(1, data.length-4));
     result.mic=parseMIC(data); // kind of check digit
-    decryptMessage(result);
+    result.macPayload.frmPayload.decrypted=getPayload(data, nwkSKey, appSKey);
     return result;
 };
-
-
-
-
 
 
 function parseMIC(data) {
     data=toArray(data);
     var mic={};
-    mic.value=data.slice(data.length-4);
+    mic.array=data.slice(data.length-4);
     return mic;
 }
-
-function decryptMessage(result) {
-    // check if there is a frmPayload
-    var frmPayload=result.macPayload.frmPayload;
-    if (! frmPayload) return;
-
-    // TODO
-
-/*
-    result.macPayload.decrypted={
-        data:decrypted,
-        text:AES.util.convertBytesToString(decrypted),
-        hex:AES.util.convertBytesToString(decrypted,'hex')
-    };
-    */
-}
-
-
 
 
 function parseMHDR(value) {
@@ -83,20 +57,22 @@ function parseMHDR(value) {
     return mhdr;
 }
 
-
 function parseMacPayload(value) {
     var currentShift=0;
     // FHDR (7..23) - Why not 22 ??? There can be only 15 opts
     // FPort (0..1)
     // FRMPayload (0..N)
     var macPayload={};
-    macPayload.valueLength=value.length;
+    macPayload.array=value;
+    macPayload.arrayLength=value.length;
     macPayload.fhdr=parseFHDR(value);
     if (currentShift<value.length) { // there must be a FPort)
         macPayload.fPort=parseFPort(value[currentShift]);
         currentShift++;
         if (currentShift<value.length) { // there is a FRMPayload)
-            macPayload.frmPayload=value.slice(currentShift);
+            macPayload.frmPayload={
+                array:value.slice(currentShift)
+            };
         }
     }
     return macPayload;
@@ -110,7 +86,7 @@ function parseMacPayload(value) {
         fhdr.fCtrl=parseFCtrl(value[4]);
         fhdr.fCnt=value.slice(5,7);
         fhdr.fOpts=value.slice(7, 7+fhdr.fCtrl.optsLen);
-        fhdr.value=value.slice(0, 7+fhdr.fCtrl.optsLen);
+        fhdr.array=value.slice(0, 7+fhdr.fCtrl.optsLen);
         currentShift+=7+fhdr.fCtrl.optsLen;
         return fhdr;
 
@@ -126,8 +102,6 @@ function parseMacPayload(value) {
         }
     }
 
-
-
     function parseFPort(value) {
         var fPort={};
         fPort.value=value;
@@ -139,9 +113,5 @@ function parseMacPayload(value) {
             fPort.text='Reserved for future standardized 13 application extension';
         }
         return fPort;
-    }
-
-    function parseFRMPayload(value) {
-
     }
 }

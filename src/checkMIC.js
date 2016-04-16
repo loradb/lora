@@ -1,6 +1,6 @@
-var defaultKeys = require('./defaultKeys.js');
+var defaultKeys = require('./util/defaultKeys.js');
 var aesCmac = require('node-aes-cmac').aesCmac;
-var toArray=require('./toArray.js');
+var toArray=require('./util/toArray.js');
 
 module.exports=function(data, nwkSKey) {
     data=toArray(data);

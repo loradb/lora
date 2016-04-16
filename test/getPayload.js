@@ -3,7 +3,7 @@
 let LORA = require('..');
 
 describe('getPayload using default keys', function () {
-    it.only('should return correct string', function () {
+    it('should return correct string', function () {
         let data='QAESAwKBbgACAbB2c5M9hkMWDus2m9lrqJ63NyclM+XZrkifwye9SPgA';
         var result=LORA.getPayload(data);
         result.ascii.should.equal('AABBCCDDEEFFGGHHIIJJKKLLMMNN');
