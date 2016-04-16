@@ -10,7 +10,5 @@ describe('decrypt using default keys', function () {
 
     it('should return AABBCCDDEEFFGGHHIIJJKKLLMMNN', function () {
         var result=LORA.parse(data);
-        console.log(result);
-
     });
 });

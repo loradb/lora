@@ -3,8 +3,6 @@ var checkMIC=require('./checkMIC.js');
 var base64ToArray=require('./base64ToArray.js');
 var AES = require('./aes.js');
 
-console.log(AES);
-
 const mTypeTexts=[
     'Join Request',
     'Join Accept',
@@ -20,7 +18,8 @@ var appAES;
 var nwkAES;
 var result;
 
-module.exports=function(data, options) {
+module.exports=function(data64, options) {
+    data = base64ToArray(data64);
     var options=options || {};
     var nwkSKey=options.nwkSKey || defaultKeys.nwkSKey;
     var appSKey=options.appSKey || defaultKeys.appSKey;
@@ -34,13 +33,12 @@ module.exports=function(data, options) {
     appAES = new AES.AES(appSKey);
     nwkAES = new AES.AES(nwkSKey);
     result = {};
-    var array = base64ToArray(data);
-    result.data=array;
-    result.dataLength=array.length;
+    result.data=data;
+    result.dataLength=data.length;
 
-    result.mhdr=parseMHDR(array[0]);
-    result.macPayload=parseMacPayload(array.slice(1, array.length-4));
-    result.mic=parseMIC(array); // kind of check digit
+    result.mhdr=parseMHDR(data[0]);
+    result.macPayload=parseMacPayload(data.slice(1, data.length-4));
+    result.mic=parseMIC(data); // kind of check digit
     decryptMessage(result);
     return result;
 };
@@ -61,26 +59,27 @@ function decryptMessage(result) {
     var frmPayload=result.macPayload.frmPayload;
     if (! frmPayload) return;
     var decrypted=[];
-    for (var i=0; i<Math.ceil(frmPayload.length/16); i++) {
-        var value=[];
-        value.push(0x01);
-        value.push(0x00, 0x00, 0x00, 0x00);
-        value.push(0x00); // direction uplink
-        for (var addr of result.macPayload.fhdr.devAddr) {
-            value.push(addr);
-        }
-        for (var addr of result.macPayload.fhdr.fCnt) {
-            value.push(addr);
-        }
-        value.push(0x00, 0x00); // FCntUp on 16 bits
 
-        value.push(0x00);
-        value.push(i+1); // the first block is expected to be 1
-        if (value.length!==16) throw Error('decrypt seed not 16');
+    var blockSeed=[];
+    blockSeed.push(0x01);
+    blockSeed.push(0x00, 0x00, 0x00, 0x00);
+    blockSeed.push(0x00); // direction uplink
+    for (var addr of result.macPayload.fhdr.devAddr) {
+        blockSeed.push(addr);
+    }
+    for (var addr of result.macPayload.fhdr.fCnt) {
+        blockSeed.push(addr);
+    }
+    blockSeed.push(0x00, 0x00); // FCntUp on 16 bits
+    blockSeed.push(0x00);
+
+    for (var i=0; i<Math.ceil(frmPayload.length/16); i++) {
+        blockSeed[15]=(i+1); // the first block is expected to be 1
+        if (blockSeed.length!==16) throw Error('decrypt seed not 16');
         if (result.macPayload.fPort.value) {
-            var key=appAES.encrypt(value);
+            var key=appAES.encrypt(blockSeed);
         } else {
-            var key=nwkAES.encrypt(value); // MAC commands only, decoded using nwkSKey
+            var key=nwkAES.encrypt(blockSeed); // MAC commands only, decoded using nwkSKey
         }
         for (var j=0+(i*16); j<Math.min(16+(i*16), frmPayload.length); j++) {
             decrypted.push(frmPayload[j] ^ key[j%16]);
