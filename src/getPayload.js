@@ -1,5 +1,5 @@
 var defaultKeys = require('./util/defaultKeys.js');
-var AES = require('./util/aes.js');
+var AES = require('./aes/aes-js.js');
 var toArray=require('./util/toArray.js');
 
 module.exports=function(data, nwkSKey, appSKey) {

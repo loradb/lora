@@ -1,5 +1,8 @@
 var defaultKeys = require('./util/defaultKeys.js');
-var aesCmac = require('node-aes-cmac').aesCmac;
+// var aesCmac = require('node-aes-cmac').aesCmac;
+
+var aesCmac = require('./cmac/aes-cmac.js').aesCmac;
+
 var toArray=require('./util/toArray.js');
 
 module.exports=function(data, nwkSKey) {
@@ -24,7 +27,10 @@ module.exports=function(data, nwkSKey) {
     var dataBuffer=new Buffer(allData);
     var keyBuffer=new Buffer(nwkSKey);
     var result=aesCmac(keyBuffer, dataBuffer); // the 4 first bytes should match the mic
-    var mic=new Buffer(data.slice(data.length-4)).toString('hex');
 
-    return (mic === result.substring(0,8));
+    for (var i=0; i<4; i++) {
+        if (result[i] != data[data.length-4+i]) return false;
+    }
+
+    return true;
 }
