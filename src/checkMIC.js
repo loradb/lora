@@ -8,6 +8,7 @@ var toArray=require('./util/toArray.js');
 module.exports=function(data, nwkSKey) {
     data=toArray(data);
     var nwkSKey=nwkSKey || defaultKeys.nwkSKey;
+    nwkSKey=toArray(nwkSKey);
     var seed=[];
     seed.push(0x49);
     seed.push(0x00, 0x00, 0x00, 0x00);

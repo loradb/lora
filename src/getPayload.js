@@ -5,7 +5,9 @@ var toArray=require('./util/toArray.js');
 module.exports=function(data, nwkSKey, appSKey) {
     data=toArray(data);
     var nwkSKey=nwkSKey || defaultKeys.nwkSKey;
+    nwkSKey=toArray(nwkSKey);
     var appSKey=appSKey || defaultKeys.appSKey;
+    appSKey=toArray(appSKey);
     var appAES = new AES.AES(appSKey);
     var nwkAES = new AES.AES(nwkSKey);
 
