@@ -1,5 +1,5 @@
 
-## Library to check and derypt Lora PHYPayload
+## Library to check and decrypt Lora PHYPayload
 
 
 To install:
