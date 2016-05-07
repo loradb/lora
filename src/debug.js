@@ -21,11 +21,15 @@ module.exports=function(data, nwkSKey, appSKey) {
     var nwkSKey=nwkSKey || defaultKeys.nwkSKey;
     var appSKey=appSKey || defaultKeys.appSKey;
 
-    if (! checkMIC(data, nwkSKey)) {
-        throw Error('Corrupted data');
+    result = {};
+
+    if (checkMIC(data, nwkSKey)) {
+        result.status="MIC check ok";
+    } else {
+        result.status="MIC check : corrupted";
     }
 
-    result = {};
+
     result.array=data;
     result.arrayLength=data.length;
 
