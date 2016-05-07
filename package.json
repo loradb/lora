@@ -1,6 +1,6 @@
 {
   "name": "lora",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "LORA - analyse PHYPayload and decrypt MACPayload.",
   "keywords": [
     "lora",
