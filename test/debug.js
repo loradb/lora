@@ -26,4 +26,13 @@ describe('decrypt using default keys', function () {
         result.status.should.equal("MIC check : corrupted");
     });
 
+    it('should not be able to decrypt', function () {
+        var result=LORA.debug(data,"2B7E151628AED2A6ABF7158809CF4FFF","2B7E151628AED2A6ABF7158809CF4FFF");
+        result.mhdr.value.should.equal(64);
+        result.mhdr.major.should.equal(0);
+        result.macPayload.fhdr.devAddrNumeric.should.equal(33755649);
+        result.macPayload.fPort.value.should.equal(1);
+        result.status.should.equal("MIC check : corrupted");
+    });
+
 });

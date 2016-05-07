@@ -36,7 +36,7 @@ module.exports=function(data, nwkSKey, appSKey) {
     result.mhdr=parseMHDR(data[0]);
     result.macPayload=parseMacPayload(data.slice(1, data.length-4));
     result.mic=parseMIC(data); // kind of check digit
-    result.macPayload.frmPayload.decrypted=getPayload(data, nwkSKey, appSKey);
+    if (result.macPayload.frmPayload) result.macPayload.frmPayload.decrypted=getPayload(data, nwkSKey, appSKey);
     return result;
 };
 
